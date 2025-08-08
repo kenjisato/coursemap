@@ -1,7 +1,7 @@
 Package: coursemap
 Type: Package
 Title: Course Dependency Map Visualization
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
     person("Kenji", "Sato", email = "mail@kenjisato.jp", role = c("aut", "cre"))
 )
