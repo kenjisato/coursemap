@@ -1,6 +1,6 @@
 //! Command-line interface for the course map tool
 
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -8,8 +8,11 @@ use std::path::PathBuf;
 #[command(about = "Generate course dependency maps from Quarto/Markdown documents")]
 #[command(version)]
 pub struct Cli {
-    /// Input directory containing course documents
-    pub input: PathBuf,
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+
+    /// Input directory containing course documents (when no subcommand is used)
+    pub input: Option<PathBuf>,
 
     /// Output file path
     #[arg(short, long, default_value = "course_map.svg")]
@@ -26,6 +29,16 @@ pub struct Cli {
     /// Verbose output
     #[arg(short, long)]
     pub verbose: bool,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Show current configuration
+    ShowConfig {
+        /// Configuration file path
+        #[arg(short, long)]
+        config: Option<PathBuf>,
+    },
 }
 
 #[derive(Clone, ValueEnum)]
@@ -55,8 +68,8 @@ impl Cli {
     }
 
     /// Get the input directory as a string
-    pub fn input_dir(&self) -> &str {
-        self.input.to_str().unwrap_or(".")
+    pub fn input_dir(&self) -> Option<&str> {
+        self.input.as_ref().and_then(|p| p.to_str())
     }
 
     /// Get the output path as a string

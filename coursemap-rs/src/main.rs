@@ -1,11 +1,61 @@
 //! Course Map - A tool to visualize course dependencies from Quarto/Markdown documents
 
 use anyhow::Result;
-use coursemap::{cli::Cli, config::Config, App};
+use coursemap::{cli::{Cli, Commands}, config::Config, App};
 
 fn main() -> Result<()> {
     let args = Cli::parse_args();
 
+    match &args.command {
+        Some(Commands::ShowConfig { config }) => {
+            show_config(config.as_ref())?;
+        }
+        None => {
+            // Default behavior: generate course map
+            if let Some(input_dir) = args.input_dir() {
+                generate_course_map(&args, input_dir)?;
+            } else {
+                eprintln!("Error: Input directory is required");
+                eprintln!("Usage: coursemap <INPUT> [OPTIONS]");
+                eprintln!("       coursemap show-config [OPTIONS]");
+                eprintln!();
+                eprintln!("For more information, try '--help'.");
+                std::process::exit(1);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn show_config(config_path: Option<&std::path::PathBuf>) -> Result<()> {
+    let config = if let Some(config_path) = config_path {
+        Config::from_file(config_path)?
+    } else {
+        Config::load_default()?
+    };
+
+    println!("Current Configuration:");
+    println!("  Root key: {}", config.root_key);
+    println!("  Phases:");
+    for (phase, phase_config) in &config.phase {
+        println!("    {}: {}", phase, phase_config.face);
+    }
+    println!("  Ignore patterns:");
+    for pattern in &config.ignore {
+        println!("    {}", pattern);
+    }
+
+    if let Some(config_path) = config_path {
+        println!("  Configuration file: {}", config_path.display());
+    } else {
+        println!("  Configuration: Default (built-in)");
+    }
+
+    Ok(())
+}
+
+fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
     // Set up logging based on verbosity
     if args.verbose {
         env_logger::Builder::from_default_env()
@@ -31,7 +81,7 @@ fn main() -> Result<()> {
     // Create and run the application
     let app = App::new(config);
     
-    println!("Scanning directory: {}", args.input_dir());
+    println!("Scanning directory: {}", input_dir);
     println!("Output file: {}", args.output_path());
     println!("Format: {}", args.format_str());
     println!();
@@ -58,7 +108,7 @@ fn main() -> Result<()> {
     }
 
     // Run the application
-    match app.run(args.input_dir(), args.output_path(), &args.format_str()) {
+    match app.run(input_dir, args.output_path(), &args.format_str()) {
         Ok(()) => {
             println!("Course map generated successfully!");
             Ok(())
