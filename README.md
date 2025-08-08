@@ -207,6 +207,10 @@ courses/
 4. Add tests
 5. Submit a pull request
 
+## AI Acknowledgement
+
+This project utilized generative AI tools, including Claude and ChatGPT, to assist in code generation, documentation, and testing. These tools were used to enhance productivity and facilitate the development process.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
