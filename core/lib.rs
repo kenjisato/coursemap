@@ -6,6 +6,7 @@ pub mod graph;
 pub mod renderer;
 
 pub use anyhow::{Error, Result};
+pub use config::Config;
 
 /// The main application structure
 pub struct App {
