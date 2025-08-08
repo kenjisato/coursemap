@@ -13,7 +13,17 @@ commit = true
 message = "Bump version: {current_version} → {new_version}"
 
 [[tool.bumpversion.files]]
+filename = "core/Cargo.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
 filename = "coursemap-rs/Cargo.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "coursemap-py/Cargo.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
@@ -32,10 +42,6 @@ filename = "coursemap-r/DESCRIPTION"
 search = 'Version: {current_version}'
 replace = 'Version: {new_version}'
 
-[[tool.bumpversion.files]]
-filename = "README.md"
-search = 'Version {current_version}'
-replace = 'Version {new_version}'
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"
