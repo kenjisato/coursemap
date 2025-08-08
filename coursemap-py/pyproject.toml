@@ -51,7 +51,7 @@ course-map = "coursemap:main"
 
 [tool.maturin]
 python-source = "python"
-module-name = "coursemap._course_map_rs"
+module-name = "coursemap._coursemap_rs"
 
 [tool.black]
 line-length = 88
@@ -66,3 +66,8 @@ python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "maturin>=1.9.3",
+]

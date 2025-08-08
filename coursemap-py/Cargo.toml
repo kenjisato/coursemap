@@ -11,7 +11,7 @@ name = "course_map_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-course-map = { path = "../rust" }
+coursemap = { path = "../coursemap-rs" }
 pyo3 = { version = "0.22", features = ["extension-module"] }
 tempfile = "3.0"
 

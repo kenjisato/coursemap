@@ -2,7 +2,7 @@
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use course_map::{Config, App};
+use coursemap::{Config, App};
 use std::collections::HashMap;
 
 #[pyclass]
@@ -90,12 +90,12 @@ impl CourseMap {
     /// Get configuration as dictionary
     pub fn get_config(&self) -> PyResult<PyObject> {
         Python::with_gil(|py| {
-            let dict = PyDict::new(py);
+            let dict = PyDict::new_bound(py);
             dict.set_item("root_key", &self.config.root_key)?;
             
-            let phases = PyDict::new(py);
+            let phases = PyDict::new_bound(py);
             for (phase, config) in &self.config.phase {
-                let phase_dict = PyDict::new(py);
+                let phase_dict = PyDict::new_bound(py);
                 phase_dict.set_item("face", &config.face)?;
                 phases.set_item(phase, phase_dict)?;
             }
@@ -109,14 +109,14 @@ impl CourseMap {
     /// Parse documents in a directory and return metadata
     #[pyo3(signature = (input_dir = "."))]
     pub fn parse_documents(&self, input_dir: &str) -> PyResult<Vec<PyObject>> {
-        let documents = course_map::parser::parse_directory(input_dir, &self.config).map_err(|e| {
+        let documents = coursemap::parser::parse_directory(input_dir, &self.config).map_err(|e| {
             pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to parse documents: {}", e))
         })?;
 
         Python::with_gil(|py| {
             let mut result = Vec::new();
             for doc in documents {
-                let dict = PyDict::new(py);
+                let dict = PyDict::new_bound(py);
                 dict.set_item("id", &doc.id)?;
                 dict.set_item("title", &doc.title)?;
                 dict.set_item("phase", &doc.phase)?;
@@ -153,19 +153,19 @@ pub fn generate_inline_svg(input_dir: &str, config_path: Option<String>) -> PyRe
 /// Check if Graphviz is available
 #[pyfunction]
 pub fn check_graphviz_available() -> bool {
-    course_map::renderer::check_graphviz_available()
+    coursemap::renderer::check_graphviz_available()
 }
 
 /// Get Graphviz version information
 #[pyfunction]
 pub fn get_graphviz_info() -> PyResult<String> {
-    course_map::renderer::get_graphviz_info().map_err(|e| {
+    coursemap::renderer::get_graphviz_info().map_err(|e| {
         pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to get Graphviz info: {}", e))
     })
 }
 
 #[pymodule]
-fn course_map_rs(_py: Python, m: &PyModule) -> PyResult<()> {
+fn coursemap_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CourseMap>()?;
     m.add_function(wrap_pyfunction!(generate_course_map, m)?)?;
     m.add_function(wrap_pyfunction!(generate_inline_svg, m)?)?;
