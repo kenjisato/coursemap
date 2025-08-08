@@ -1,6 +1,6 @@
 [package]
 name = "course-map-python"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Python bindings for course-map"
 authors = ["Your Name <your.email@example.com>"]
