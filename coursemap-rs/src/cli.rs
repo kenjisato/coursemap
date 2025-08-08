@@ -9,7 +9,6 @@ use std::path::PathBuf;
 #[command(version)]
 pub struct Cli {
     /// Input directory containing course documents
-    #[arg(short, long, default_value = ".")]
     pub input: PathBuf,
 
     /// Output file path
