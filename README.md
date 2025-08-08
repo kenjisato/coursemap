@@ -64,7 +64,7 @@ Your course content here...
 
 ## Configuration
 
-Create a `config.yml` file to customize phases and colors:
+Create a `coursemap.yml` file to customize phases and colors:
 
 ```yaml
 root-key: course-map
@@ -123,7 +123,7 @@ coursemap/
 ├── coursemap-py/       # 🐍 Python package for PyPI
 ├── coursemap-r/        # 📊 R package for CRAN (RStudio project)
 ├── test_docs/          # 📝 Test data
-├── config.yml          # ⚙️ Example configuration
+├── coursemap.yml       # ⚙️ Example configuration
 ├── .bumpversion.toml   # 🔄 Version management
 ├── CHANGELOG.md        # 📋 Change history
 ├── PUBLISHING.md       # 📖 Publishing guide

@@ -58,12 +58,11 @@ impl Config {
 
     /// Load configuration from the default locations
     pub fn load_default() -> Result<Self> {
-        // Try to load from common config file locations
+        // Try to load from user config file locations
         let config_paths = [
-            "config.yml",
-            "config.yaml",
-            "src/course_map/config.yml",
-            ".course-map.yml",
+            "coursemap.yml",
+            "coursemap.yaml",
+            ".coursemap.yml",
         ];
 
         for path in &config_paths {
@@ -72,8 +71,11 @@ impl Config {
             }
         }
 
-        // If no config file found, use default configuration
-        Ok(Self::default())
+        // If no user config file found, use package default configuration
+        let default_config = include_str!("default-coursemap.yml");
+        let config: Config = serde_yaml::from_str(default_config)
+            .with_context(|| "Failed to parse default configuration")?;
+        Ok(config)
     }
 
     /// Get the color for a given phase
