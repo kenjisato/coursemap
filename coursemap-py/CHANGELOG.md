@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-08-08
+
 ### Added
 - Initial Python package implementation using maturin
 - Python bindings for Rust core functionality
