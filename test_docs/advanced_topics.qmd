@@ -1,0 +1,11 @@
+---
+title: "Advanced Economic Topics"
+course-map:
+  id: advanced
+  phase: Post
+  prerequisites: ["micro"]
+---
+
+# Advanced Economic Topics
+
+This course covers advanced topics in economics.

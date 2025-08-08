@@ -1,0 +1,11 @@
+---
+title: "Introduction to Economics"
+course-map:
+  id: intro
+  phase: Pre
+  prerequisites: []
+---
+
+# Introduction to Economics
+
+This is an introductory course to economics.

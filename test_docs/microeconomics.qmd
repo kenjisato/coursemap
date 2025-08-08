@@ -1,0 +1,11 @@
+---
+title: "Microeconomics"
+course-map:
+  id: micro
+  phase: InClass
+  prerequisites: ["intro"]
+---
+
+# Microeconomics
+
+This course covers microeconomic theory and applications.

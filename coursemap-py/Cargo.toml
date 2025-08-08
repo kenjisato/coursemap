@@ -1,0 +1,19 @@
+[package]
+name = "course-map-python"
+version = "0.1.0"
+edition = "2021"
+description = "Python bindings for course-map"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+
+[lib]
+name = "course_map_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+course-map = { path = "../rust" }
+pyo3 = { version = "0.22", features = ["extension-module"] }
+tempfile = "3.0"
+
+[features]
+default = []
