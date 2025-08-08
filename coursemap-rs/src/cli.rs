@@ -7,6 +7,7 @@ use std::path::PathBuf;
 #[command(name = "course-map")]
 #[command(about = "Generate course dependency maps from Quarto/Markdown documents")]
 #[command(version)]
+#[command(subcommand_precedence_over_arg = true)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -34,6 +35,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Show current configuration
+    #[command(name = "show-config")]
     ShowConfig {
         /// Configuration file path
         #[arg(short, long)]

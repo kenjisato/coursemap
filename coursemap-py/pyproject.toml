@@ -51,7 +51,7 @@ course-map = "coursemap:main"
 
 [tool.maturin]
 python-source = "python"
-module-name = "coursemap._coursemap_rs"
+module-name = "coursemap.coursemap_rs"
 
 [tool.black]
 line-length = 88

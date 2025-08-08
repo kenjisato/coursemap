@@ -2,8 +2,7 @@
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use coursemap::{Config, App};
-use std::collections::HashMap;
+use coursemap_core::{Config, App};
 
 #[pyclass]
 #[derive(Clone)]
@@ -109,7 +108,7 @@ impl CourseMap {
     /// Parse documents in a directory and return metadata
     #[pyo3(signature = (input_dir = "."))]
     pub fn parse_documents(&self, input_dir: &str) -> PyResult<Vec<PyObject>> {
-        let documents = coursemap::parser::parse_directory(input_dir, &self.config).map_err(|e| {
+        let documents = coursemap_core::parser::parse_directory(input_dir, &self.config).map_err(|e| {
             pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to parse documents: {}", e))
         })?;
 
@@ -153,13 +152,13 @@ pub fn generate_inline_svg(input_dir: &str, config_path: Option<String>) -> PyRe
 /// Check if Graphviz is available
 #[pyfunction]
 pub fn check_graphviz_available() -> bool {
-    coursemap::renderer::check_graphviz_available()
+    coursemap_core::renderer::check_graphviz_available()
 }
 
 /// Get Graphviz version information
 #[pyfunction]
 pub fn get_graphviz_info() -> PyResult<String> {
-    coursemap::renderer::get_graphviz_info().map_err(|e| {
+    coursemap_core::renderer::get_graphviz_info().map_err(|e| {
         pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to get Graphviz info: {}", e))
     })
 }

@@ -1,7 +1,7 @@
 //! Course Map - A tool to visualize course dependencies from Quarto/Markdown documents
 
 use anyhow::Result;
-use coursemap::{cli::{Cli, Commands}, config::Config, App};
+use coursemap::{cli::{Cli, Commands}, Config, App, renderer};
 
 fn main() -> Result<()> {
     let args = Cli::parse_args();
@@ -88,7 +88,7 @@ fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
 
     // Check if Graphviz is available for non-DOT formats
     if args.format_str() != "dot" {
-        if !coursemap::renderer::check_graphviz_available() {
+        if !renderer::check_graphviz_available() {
             eprintln!("Warning: Graphviz not found. Only DOT format will be available.");
             eprintln!("To generate SVG/PNG files, please install Graphviz:");
             eprintln!("  macOS: brew install graphviz");
@@ -100,7 +100,7 @@ fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
                 return Err(anyhow::anyhow!("Cannot generate {} format without Graphviz", args.format_str()));
             }
         } else if args.verbose {
-            if let Ok(info) = coursemap::renderer::get_graphviz_info() {
+            if let Ok(info) = renderer::get_graphviz_info() {
                 println!("Graphviz found: {}", info);
                 println!();
             }

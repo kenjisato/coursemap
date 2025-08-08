@@ -10,7 +10,7 @@ import sys
 import os
 
 try:
-    from ._coursemap_rs import (
+    from .coursemap_rs import (
         CourseMap,
         generate_course_map,
         generate_inline_svg,

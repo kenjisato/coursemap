@@ -1,16 +1,9 @@
-//! Course Map - A tool to visualize course dependencies from Quarto/Markdown documents
+//! Course Map Core - Core library for course dependency visualization
 
-pub mod cli;
 pub mod config;
 pub mod parser;
 pub mod graph;
 pub mod renderer;
-
-#[cfg(feature = "python")]
-pub mod python;
-
-#[cfg(feature = "r")]
-pub mod r;
 
 pub use anyhow::{Error, Result};
 
