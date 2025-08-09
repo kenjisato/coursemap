@@ -1,18 +1,18 @@
 [package]
-name = "course-map-python"
-version = "0.1.2"
+name = "coursemap-py-bindings"
+version = "0.1.5"
 edition = "2021"
-description = "Python bindings for course-map"
-authors = ["Your Name <your.email@example.com>"]
+description = "Python bindings for coursemap"
+authors = ["Kenji Sato <mail@kenjisato.jp>"]
 license = "MIT"
 
 [lib]
-name = "course_map_rs"
+name = "coursemap_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-coursemap-core = { path = "../core" }
 pyo3 = { version = "0.22", features = ["extension-module"] }
+coursemap = { path = "../coursemap-rs" }
 tempfile = "3.0"
 
 [features]
