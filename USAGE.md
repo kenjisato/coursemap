@@ -1,74 +1,67 @@
 # Course Map Usage Guide
 
-This document provides examples of how to use the course-map tool in different environments.
+This document provides examples of how to use the coursemap tool in different environments.
 
 ## Rust Binary
+
+### Installation
+
+```bash
+# Install from crates.io
+cargo install coursemap
+
+# Or build from source
+cargo build --release
+```
 
 ### Basic Usage
 
 ```bash
 # Generate SVG from current directory
-cargo run -- -i test_docs -o course_map.svg
+coursemap test_docs -o course_map.svg
 
 # Generate PNG format
-cargo run -- -i test_docs -o course_map.png -f png
+coursemap test_docs -o course_map.png -f png
 
 # Generate DOT format (no Graphviz required)
-cargo run -- -i test_docs -o course_map.dot -f dot
+coursemap test_docs -o course_map.dot -f dot
 
 # Use custom configuration
-cargo run -- -i test_docs -o course_map.svg -c config.yml
+coursemap test_docs -o course_map.svg -c config.yml
 
 # Verbose output
-cargo run -- -i test_docs -o course_map.svg -v
+coursemap test_docs -o course_map.svg -v
+
+# Show help
+coursemap --help
 ```
 
-### Release Binary
-
-```bash
-# Build release version
-cargo build --release
-
-# Use release binary
-./target/release/course-map -i test_docs -o course_map.svg
-```
-
-## Python Package (with maturin)
+## Python Package
 
 ### Installation
 
 ```bash
-# Install maturin
-pip install maturin
-
-# Build and install Python package
-maturin develop --features python
-
-# Or build wheel
-maturin build --features python
-pip install target/wheels/course_map-*.whl
+# Install from PyPI
+pip install coursemap
 ```
 
 ### Usage in Python
 
 ```python
-import course_map
+import coursemap
 
-# Basic usage
-course_map.generate_course_map("./courses", "course_map.svg")
+# Quick display (like matplotlib.pyplot.show())
+coursemap.show("./courses")
 
-# Generate inline SVG for Quarto
-svg_content = course_map.generate_inline_svg("./courses")
-print(svg_content)
-
-# Using the class interface
-cm = course_map.CourseMap()
-cm.generate_svg("./courses", "output.svg")
+# Object-oriented approach (recommended)
+cm = coursemap.CourseMap("./courses")
+cm.show()  # Display inline in Jupyter/Quarto
+cm.save("course_map.svg")  # Save to file
 
 # Check Graphviz availability
-if course_map.check_graphviz_available():
+if coursemap.graphviz_available():
     print("Graphviz is available")
-    print(course_map.get_graphviz_info())
+    print(coursemap.graphviz_info())
 ```
 
 ### Usage in Quarto Documents
@@ -77,24 +70,26 @@ if course_map.check_graphviz_available():
 # In a .qmd file
 ```{python}
 #| echo: false
-import course_map
+import coursemap
 
-# Generate and display course map
-svg_content = course_map.create_quarto_filter("../courses")
-print(svg_content)
+# Simple one-liner for Quarto
+coursemap.show("../courses")
+
+# Or save and display
+cm = coursemap.CourseMap("../courses")
+cm.show()  # Displays inline in Quarto
 ```
 
-## R Package (with extendr)
+## R Package
 
 ### Installation
 
 ```r
-# Install required packages
-install.packages(c("rextendr", "devtools"))
+# Install from CRAN
+install.packages("coursemap")
 
-# Build and install R package
-rextendr::document()
-devtools::install()
+# Or install development version
+# devtools::install_github("kenjisato/coursemap", subdir = "coursemap-r")
 ```
 
 ### Usage in R
@@ -102,17 +97,15 @@ devtools::install()
 ```r
 library(coursemap)
 
-# Basic usage
-generate_course_map("./courses", "course_map.svg")
-
-# Generate inline SVG for Quarto
-svg_content <- generate_inline_svg("./courses")
-cat(svg_content)
+# Object-oriented approach (recommended)
+cm <- coursemap("./courses")
+plot(cm)  # Display in RStudio/knitr
+write_map(cm, "course_map.svg")  # Save to file
 
 # Check Graphviz availability
-if (check_graphviz_available()) {
+if (graphviz_available()) {
   cat("Graphviz is available\n")
-  cat(get_graphviz_info(), "\n")
+  cat(graphviz_info(), "\n")
 }
 ```
 
@@ -124,9 +117,9 @@ if (check_graphviz_available()) {
 #| echo: false
 library(coursemap)
 
-# Generate and display course map
-svg_content <- create_quarto_filter("../courses")
-cat(svg_content)
+# Simple display in Quarto
+cm <- coursemap("../courses")
+plot(cm)  # Automatically displays inline in Quarto
 ```
 
 ## Document Format
