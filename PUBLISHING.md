@@ -6,12 +6,10 @@ This document outlines the process for publishing the course-map packages to the
 
 ```
 coursemap/
-├── core/               # Shared core functionality
-├── coursemap-rs/       # Rust library for crates.io
+├── coursemap-rs/       # Rust library + CLI for crates.io
 ├── coursemap-py/       # Python package for PyPI
 ├── coursemap-r/        # R package for CRAN (RStudio project)
 ├── test_docs/          # Test data
-├── config.yml          # Example configuration
 ├── .bumpversion.toml   # Version management
 └── README.md           # Main documentation
 ```

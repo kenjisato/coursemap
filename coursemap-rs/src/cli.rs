@@ -4,7 +4,6 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "course-map")]
 #[command(about = "Generate course dependency maps from Quarto/Markdown documents")]
 #[command(version)]
 #[command(subcommand_precedence_over_arg = true)]

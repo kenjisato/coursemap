@@ -72,7 +72,7 @@ pub fn parse_directory(dir_path: &str, config: &Config) -> Result<Vec<Document>>
         .filter(|e| e.file_type().is_file())
     {
         let path = entry.path();
-        
+
         // Check if file should be ignored
         if let Some(path_str) = path.to_str() {
             if config.should_ignore(path_str) {
@@ -113,7 +113,7 @@ pub fn parse_document(file_path: &Path, config: &Config) -> Result<Document> {
         let lines: Vec<&str> = content.lines().collect();
         let mut yaml_content = String::new();
         let mut in_frontmatter = false;
-        
+
         for line in lines {
             if line.trim() == "---" {
                 if !in_frontmatter {
@@ -123,32 +123,33 @@ pub fn parse_document(file_path: &Path, config: &Config) -> Result<Document> {
                     break;
                 }
             }
-            
+
             if in_frontmatter {
                 yaml_content.push_str(line);
                 yaml_content.push('\n');
             }
         }
-        
+
         if !yaml_content.is_empty() {
-            if let Ok(yaml_value) = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content) {
-                if let serde_yaml::Value::Mapping(map) = yaml_value {
-                    for (key, value) in map {
-                        if let serde_yaml::Value::String(key_str) = key {
-                            metadata.insert(key_str.clone(), value.clone());
-                            
-                            // Extract title
-                            if key_str == "title" {
-                                if let serde_yaml::Value::String(ref title_str) = value {
-                                    title = title_str.clone();
-                                }
+            if let Ok(serde_yaml::Value::Mapping(map)) =
+                serde_yaml::from_str::<serde_yaml::Value>(&yaml_content)
+            {
+                for (key, value) in map {
+                    if let serde_yaml::Value::String(key_str) = key {
+                        metadata.insert(key_str.clone(), value.clone());
+
+                        // Extract title
+                        if key_str == "title" {
+                            if let serde_yaml::Value::String(ref title_str) = value {
+                                title = title_str.clone();
                             }
-                            
-                            // Extract course-map metadata
-                            if key_str == config.root_key {
-                                if let Ok(cm_data) = serde_yaml::from_value::<CourseMapMetadata>(value) {
-                                    course_map_data = Some(cm_data);
-                                }
+                        }
+
+                        // Extract course-map metadata
+                        if key_str == config.root_key {
+                            if let Ok(cm_data) = serde_yaml::from_value::<CourseMapMetadata>(value)
+                            {
+                                course_map_data = Some(cm_data);
                             }
                         }
                     }
@@ -190,8 +191,10 @@ mod tests {
     #[test]
     fn test_parse_document_with_frontmatter() -> Result<()> {
         let temp_file = NamedTempFile::with_suffix(".qmd")?;
-        
-        std::fs::write(temp_file.path(), r#"---
+
+        std::fs::write(
+            temp_file.path(),
+            r#"---
 title: "Test Course"
 course-map:
   id: test-course
@@ -200,7 +203,8 @@ course-map:
 ---
 
 # Test Course Content
-"#)?;
+"#,
+        )?;
 
         let config = Config::default();
         let doc = parse_document(temp_file.path(), &config)?;
@@ -216,7 +220,7 @@ course-map:
     #[test]
     fn test_parse_document_without_frontmatter() -> Result<()> {
         let temp_file = NamedTempFile::with_suffix(".md")?;
-        
+
         std::fs::write(temp_file.path(), "# Just a regular markdown file")?;
 
         let config = Config::default();
@@ -252,5 +256,165 @@ course-map:
         );
 
         assert_eq!(doc_no_title.display_name(), "test-id");
+    }
+
+    #[test]
+    fn test_parse_directory() -> Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let dir_path = temp_dir.path();
+
+        // Create test files
+        std::fs::write(
+            dir_path.join("course1.qmd"),
+            r#"---
+title: "Course 1"
+course-map:
+  id: course1
+  phase: Pre
+  prerequisites: []
+---
+# Course 1 Content
+"#,
+        )?;
+
+        std::fs::write(
+            dir_path.join("course2.md"),
+            r#"---
+title: "Course 2"
+course-map:
+  id: course2
+  phase: InClass
+  prerequisites: ["course1"]
+---
+# Course 2 Content
+"#,
+        )?;
+
+        // Create a file that should be ignored
+        std::fs::write(dir_path.join("index.qmd"), "# Index file")?;
+
+        // Create a non-course file
+        std::fs::write(dir_path.join("readme.txt"), "Not a course file")?;
+
+        let config = Config::default();
+        let documents = parse_directory(dir_path.to_str().unwrap(), &config)?;
+
+        assert_eq!(documents.len(), 2);
+
+        let course1 = documents.iter().find(|d| d.id == "course1").unwrap();
+        assert_eq!(course1.title, "Course 1");
+        assert_eq!(course1.phase, "Pre");
+        assert!(course1.prerequisites.is_empty());
+
+        let course2 = documents.iter().find(|d| d.id == "course2").unwrap();
+        assert_eq!(course2.title, "Course 2");
+        assert_eq!(course2.phase, "InClass");
+        assert_eq!(course2.prerequisites, vec!["course1"]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_directory_nonexistent() {
+        let config = Config::default();
+        let result = parse_directory("/nonexistent/path", &config);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Directory does not exist"));
+    }
+
+    #[test]
+    fn test_parse_document_with_custom_root_key() -> Result<()> {
+        let temp_file = NamedTempFile::with_suffix(".qmd")?;
+
+        std::fs::write(
+            temp_file.path(),
+            r#"---
+title: "Custom Course"
+my-custom-key:
+  id: custom-course
+  phase: Post
+  prerequisites: ["req1", "req2"]
+---
+# Custom Course Content
+"#,
+        )?;
+
+        let mut config = Config::default();
+        config.root_key = "my-custom-key".to_string();
+
+        let doc = parse_document(temp_file.path(), &config)?;
+
+        assert_eq!(doc.id, "custom-course");
+        assert_eq!(doc.title, "Custom Course");
+        assert_eq!(doc.phase, "Post");
+        assert_eq!(doc.prerequisites, vec!["req1", "req2"]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_document_partial_metadata() -> Result<()> {
+        let temp_file = NamedTempFile::with_suffix(".qmd")?;
+
+        std::fs::write(
+            temp_file.path(),
+            r#"---
+title: "Partial Course"
+course-map:
+  id: partial-course
+  # phase and prerequisites are optional
+---
+# Partial Course Content
+"#,
+        )?;
+
+        let config = Config::default();
+        let doc = parse_document(temp_file.path(), &config)?;
+
+        assert_eq!(doc.id, "partial-course");
+        assert_eq!(doc.title, "Partial Course");
+        assert_eq!(doc.phase, "Unknown"); // Default when not specified
+        assert!(doc.prerequisites.is_empty()); // Default when not specified
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_supported_file_extensions() -> Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let dir_path = temp_dir.path();
+
+        // Create files with different extensions
+        std::fs::write(
+            dir_path.join("test.qmd"),
+            "---\ntitle: QMD\ncourse-map:\n  id: qmd\n---\n",
+        )?;
+        std::fs::write(
+            dir_path.join("test.md"),
+            "---\ntitle: MD\ncourse-map:\n  id: md\n---\n",
+        )?;
+        std::fs::write(
+            dir_path.join("test.rmd"),
+            "---\ntitle: RMD\ncourse-map:\n  id: rmd\n---\n",
+        )?;
+        std::fs::write(
+            dir_path.join("test.txt"),
+            "---\ntitle: TXT\ncourse-map:\n  id: txt\n---\n",
+        )?; // Should be ignored
+
+        let config = Config::default();
+        let documents = parse_directory(dir_path.to_str().unwrap(), &config)?;
+
+        assert_eq!(documents.len(), 3); // Only .qmd, .md, .rmd files
+
+        let ids: Vec<&String> = documents.iter().map(|d| &d.id).collect();
+        assert!(ids.contains(&&"qmd".to_string()));
+        assert!(ids.contains(&&"md".to_string()));
+        assert!(ids.contains(&&"rmd".to_string()));
+
+        Ok(())
     }
 }

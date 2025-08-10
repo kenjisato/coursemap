@@ -1,7 +1,10 @@
 //! Course Map - A tool to visualize course dependencies from Quarto/Markdown documents
 
 use anyhow::Result;
-use coursemap::{cli::{Cli, Commands}, Config, App, renderer};
+use coursemap::{
+    cli::{Cli, Commands},
+    renderer, App, Config,
+};
 
 fn main() -> Result<()> {
     let args = Cli::parse_args();
@@ -43,7 +46,7 @@ fn show_config(config_path: Option<&std::path::PathBuf>) -> Result<()> {
     }
     println!("  Ignore patterns:");
     for pattern in &config.ignore {
-        println!("    {}", pattern);
+        println!("    {pattern}");
     }
 
     if let Some(config_path) = config_path {
@@ -80,28 +83,31 @@ fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
 
     // Create and run the application
     let app = App::new(config);
-    
-    println!("Scanning directory: {}", input_dir);
+
+    println!("Scanning directory: {input_dir}");
     println!("Output file: {}", args.output_path());
     println!("Format: {}", args.format_str());
     println!();
 
     // Check if Graphviz is available for non-DOT formats
     if args.format_str() != "dot" {
-        if !renderer::check_graphviz_available() {
+        if !renderer::graphviz_available() {
             eprintln!("Warning: Graphviz not found. Only DOT format will be available.");
             eprintln!("To generate SVG/PNG files, please install Graphviz:");
             eprintln!("  macOS: brew install graphviz");
             eprintln!("  Ubuntu/Debian: sudo apt-get install graphviz");
             eprintln!("  Windows: Download from https://graphviz.org/download/");
             eprintln!();
-            
+
             if args.format_str() != "dot" {
-                return Err(anyhow::anyhow!("Cannot generate {} format without Graphviz", args.format_str()));
+                return Err(anyhow::anyhow!(
+                    "Cannot generate {} format without Graphviz",
+                    args.format_str()
+                ));
             }
         } else if args.verbose {
-            if let Ok(info) = renderer::get_graphviz_info() {
-                println!("Graphviz found: {}", info);
+            if let Ok(info) = renderer::graphviz_info() {
+                println!("Graphviz found: {info}");
                 println!();
             }
         }
@@ -114,15 +120,15 @@ fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
             Ok(())
         }
         Err(e) => {
-            eprintln!("Error: {}", e);
-            
+            eprintln!("Error: {e}");
+
             // Print additional context for common errors
             if e.to_string().contains("Directory does not exist") {
                 eprintln!("Make sure the input directory exists and contains course documents.");
             } else if e.to_string().contains("Graphviz") {
                 eprintln!("Try using --format dot to generate DOT format without Graphviz.");
             }
-            
+
             std::process::exit(1);
         }
     }

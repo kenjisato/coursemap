@@ -27,9 +27,8 @@ pub fn render_graph(
 pub fn render_dot(graph: &CourseGraph, output_path: &str, config: &Config) -> Result<()> {
     let dot_content = generate_dot_content(graph, config)?;
     fs::write(output_path, dot_content)
-        .with_context(|| format!("Failed to write DOT file: {}", output_path))?;
-    
-    println!("Generated DOT file: {}", output_path);
+        .with_context(|| format!("Failed to write DOT file: {output_path}"))?;
+
     Ok(())
 }
 
@@ -41,20 +40,20 @@ pub fn render_with_graphviz(
     config: &Config,
 ) -> Result<()> {
     let dot_content = generate_dot_content(graph, config)?;
-    
+
     // Check if graphviz is available
     let graphviz_cmd = if Command::new("dot").arg("-V").output().is_ok() {
         "dot"
     } else {
         return Err(anyhow::anyhow!(
-            "Graphviz 'dot' command not found. Please install Graphviz to generate {} files.", 
+            "Graphviz 'dot' command not found. Please install Graphviz to generate {} files.",
             format.to_uppercase()
         ));
     };
 
     // Run graphviz to generate the output
     let output = Command::new(graphviz_cmd)
-        .arg(format!("-T{}", format))
+        .arg(format!("-T{format}"))
         .arg("-o")
         .arg(output_path)
         .stdin(std::process::Stdio::piped())
@@ -66,11 +65,13 @@ pub fn render_with_graphviz(
     // Write DOT content to stdin
     if let Some(mut stdin) = output.stdin.as_ref() {
         use std::io::Write;
-        stdin.write_all(dot_content.as_bytes())
+        stdin
+            .write_all(dot_content.as_bytes())
             .with_context(|| "Failed to write DOT content to Graphviz")?;
     }
 
-    let result = output.wait_with_output()
+    let result = output
+        .wait_with_output()
         .with_context(|| "Failed to wait for Graphviz process")?;
 
     if !result.status.success() {
@@ -78,14 +79,13 @@ pub fn render_with_graphviz(
         return Err(anyhow::anyhow!("Graphviz failed: {}", stderr));
     }
 
-    println!("Generated {} file: {}", format.to_uppercase(), output_path);
     Ok(())
 }
 
 /// Generate DOT format content from a course graph
-fn generate_dot_content(graph: &CourseGraph, config: &Config) -> Result<String> {
+pub fn generate_dot_content(graph: &CourseGraph, config: &Config) -> Result<String> {
     let mut dot = String::new();
-    
+
     // Start digraph
     writeln!(dot, "digraph CourseMap {{")?;
     writeln!(dot, "    rankdir=TB;")?;
@@ -97,7 +97,7 @@ fn generate_dot_content(graph: &CourseGraph, config: &Config) -> Result<String> 
     for (_node_index, node) in graph.nodes() {
         let color = config.get_phase_color(&node.phase);
         let label = escape_dot_string(&node.display_name);
-        
+
         writeln!(
             dot,
             "    \"{}\" [label=\"{}\", fillcolor=\"{}\"];",
@@ -113,7 +113,7 @@ fn generate_dot_content(graph: &CourseGraph, config: &Config) -> Result<String> 
     for (source_idx, target_idx) in graph.edges() {
         let source_node = &graph.graph[source_idx];
         let target_node = &graph.graph[target_idx];
-        
+
         writeln!(
             dot,
             "    \"{}\" -> \"{}\";",
@@ -123,33 +123,37 @@ fn generate_dot_content(graph: &CourseGraph, config: &Config) -> Result<String> 
     }
 
     // Add phase-based subgraphs for better layout
-    let mut phases: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    let mut phases: std::collections::HashMap<String, Vec<String>> =
+        std::collections::HashMap::new();
     for (_, node) in graph.nodes() {
-        phases.entry(node.phase.clone()).or_default().push(node.id.clone());
+        phases
+            .entry(node.phase.clone())
+            .or_default()
+            .push(node.id.clone());
     }
 
     if phases.len() > 1 {
         writeln!(dot)?;
         writeln!(dot, "    // Phase-based clustering")?;
-        
+
         for (phase, node_ids) in phases {
             if node_ids.len() > 1 {
                 writeln!(dot, "    subgraph cluster_{} {{", escape_dot_string(&phase))?;
-                writeln!(dot, "        label=\"{} Phase\";", phase)?;
+                writeln!(dot, "        label=\"{phase} Phase\";")?;
                 writeln!(dot, "        style=dashed;")?;
                 writeln!(dot, "        color=lightgray;")?;
-                
+
                 for node_id in node_ids {
                     writeln!(dot, "        \"{}\";", escape_dot_string(&node_id))?;
                 }
-                
+
                 writeln!(dot, "    }}")?;
             }
         }
     }
 
     writeln!(dot, "}}")?;
-    
+
     Ok(dot)
 }
 
@@ -163,7 +167,7 @@ fn escape_dot_string(s: &str) -> String {
 }
 
 /// Check if Graphviz is available on the system
-pub fn check_graphviz_available() -> bool {
+pub fn graphviz_available() -> bool {
     Command::new("dot")
         .arg("-V")
         .output()
@@ -172,7 +176,7 @@ pub fn check_graphviz_available() -> bool {
 }
 
 /// Get information about the available Graphviz installation
-pub fn get_graphviz_info() -> Result<String> {
+pub fn graphviz_info() -> Result<String> {
     let output = Command::new("dot")
         .arg("-V")
         .output()
@@ -189,20 +193,20 @@ pub fn get_graphviz_info() -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{CourseGraph, CourseNode};
     use crate::config::Config;
+    use crate::graph::{CourseGraph, CourseNode};
 
     fn create_test_graph() -> CourseGraph {
         let mut graph = CourseGraph::new();
         let mut petgraph = petgraph::Graph::new();
-        
+
         let node1 = CourseNode {
             id: "intro".to_string(),
             title: "Introduction".to_string(),
             phase: "Pre".to_string(),
             display_name: "Introduction\n(intro)".to_string(),
         };
-        
+
         let node2 = CourseNode {
             id: "advanced".to_string(),
             title: "Advanced Topics".to_string(),
@@ -225,9 +229,9 @@ mod tests {
     fn test_generate_dot_content() -> Result<()> {
         let graph = create_test_graph();
         let config = Config::default();
-        
+
         let dot_content = generate_dot_content(&graph, &config)?;
-        
+
         assert!(dot_content.contains("digraph CourseMap"));
         assert!(dot_content.contains("\"intro\""));
         assert!(dot_content.contains("\"advanced\""));
@@ -250,12 +254,12 @@ mod tests {
     fn test_render_dot() -> Result<()> {
         let graph = create_test_graph();
         let config = Config::default();
-        
+
         let temp_file = tempfile::NamedTempFile::new()?;
         let temp_path = temp_file.path().to_str().unwrap();
-        
+
         render_dot(&graph, temp_path, &config)?;
-        
+
         let content = std::fs::read_to_string(temp_path)?;
         assert!(content.contains("digraph CourseMap"));
 

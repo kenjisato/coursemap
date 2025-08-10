@@ -31,8 +31,13 @@ impl CourseNode {
     }
 }
 
+impl Default for CourseGraph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CourseGraph {
-    /// Create a new empty course graph
     pub fn new() -> Self {
         Self {
             graph: DiGraph::new(),
@@ -59,13 +64,17 @@ impl CourseGraph {
 
     /// Add an edge between two nodes (prerequisite -> course)
     pub fn add_edge(&mut self, prerequisite_id: &str, course_id: &str) -> Result<()> {
-        let prerequisite_index = self.node_map.get(prerequisite_id)
+        let prerequisite_index = self
+            .node_map
+            .get(prerequisite_id)
             .copied()
-            .with_context(|| format!("Prerequisite node not found: {}", prerequisite_id))?;
-        
-        let course_index = self.node_map.get(course_id)
+            .with_context(|| format!("Prerequisite node not found: {prerequisite_id}"))?;
+
+        let course_index = self
+            .node_map
+            .get(course_id)
             .copied()
-            .with_context(|| format!("Course node not found: {}", course_id))?;
+            .with_context(|| format!("Course node not found: {course_id}"))?;
 
         self.graph.add_edge(prerequisite_index, course_index, ());
         Ok(())
@@ -73,13 +82,16 @@ impl CourseGraph {
 
     /// Get a node by its ID
     pub fn get_node(&self, id: &str) -> Option<&CourseNode> {
-        self.node_map.get(id)
+        self.node_map
+            .get(id)
             .and_then(|&index| self.graph.node_weight(index))
     }
 
     /// Get all nodes in the graph
     pub fn nodes(&self) -> impl Iterator<Item = (NodeIndex, &CourseNode)> {
-        self.graph.node_indices().map(move |idx| (idx, &self.graph[idx]))
+        self.graph
+            .node_indices()
+            .map(move |idx| (idx, &self.graph[idx]))
     }
 
     /// Get all edges in the graph
@@ -118,7 +130,8 @@ impl CourseGraph {
             .filter(|&node| {
                 self.graph
                     .neighbors_directed(node, petgraph::Direction::Incoming)
-                    .count() == 0
+                    .count()
+                    == 0
             })
             .collect()
     }
@@ -130,7 +143,8 @@ impl CourseGraph {
             .filter(|&node| {
                 self.graph
                     .neighbors_directed(node, petgraph::Direction::Outgoing)
-                    .count() == 0
+                    .count()
+                    == 0
             })
             .collect()
     }
@@ -150,14 +164,15 @@ pub fn build_graph(documents: Vec<Document>) -> Result<CourseGraph> {
         for prerequisite in &doc.prerequisites {
             // Check if prerequisite exists as a node
             if graph.node_map.contains_key(prerequisite) {
-                graph.add_edge(prerequisite, &doc.id)
-                    .with_context(|| {
-                        format!("Failed to add edge from {} to {}", prerequisite, doc.id)
-                    })?;
+                graph.add_edge(prerequisite, &doc.id).with_context(|| {
+                    format!("Failed to add edge from {} to {}", prerequisite, doc.id)
+                })?;
             } else {
                 // Log warning about missing prerequisite
-                eprintln!("Warning: Prerequisite '{}' for course '{}' not found in documents", 
-                         prerequisite, doc.id);
+                eprintln!(
+                    "Warning: Prerequisite '{}' for course '{}' not found in documents",
+                    prerequisite, doc.id
+                );
             }
         }
     }
@@ -177,7 +192,12 @@ mod tests {
     use std::collections::HashMap;
     use std::path::PathBuf;
 
-    fn create_test_document(id: &str, title: &str, phase: &str, prerequisites: Vec<&str>) -> Document {
+    fn create_test_document(
+        id: &str,
+        title: &str,
+        phase: &str,
+        prerequisites: Vec<&str>,
+    ) -> Document {
         Document::new(
             id.to_string(),
             title.to_string(),
@@ -210,7 +230,12 @@ mod tests {
             create_test_document("intro", "Introduction", "Pre", vec![]),
             create_test_document("micro", "Microeconomics", "InClass", vec!["intro"]),
             create_test_document("macro", "Macroeconomics", "InClass", vec!["intro"]),
-            create_test_document("advanced", "Advanced Topics", "Post", vec!["micro", "macro"]),
+            create_test_document(
+                "advanced",
+                "Advanced Topics",
+                "Post",
+                vec!["micro", "macro"],
+            ),
         ];
 
         let graph = build_graph(documents)?;
@@ -236,9 +261,12 @@ mod tests {
 
     #[test]
     fn test_missing_prerequisite() -> Result<()> {
-        let documents = vec![
-            create_test_document("advanced", "Advanced Topics", "Post", vec!["missing"]),
-        ];
+        let documents = vec![create_test_document(
+            "advanced",
+            "Advanced Topics",
+            "Post",
+            vec!["missing"],
+        )];
 
         let graph = build_graph(documents)?;
 
@@ -261,7 +289,7 @@ mod tests {
         let sorted = graph.topological_sort()?;
 
         assert_eq!(sorted.len(), 3);
-        
+
         // The first node should be intro (no prerequisites)
         let first_node = &graph.graph[sorted[0]];
         assert_eq!(first_node.id, "intro");

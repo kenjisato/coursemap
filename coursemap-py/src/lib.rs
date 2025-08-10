@@ -1,8 +1,10 @@
 //! Python bindings for the course-map library using PyO3
 
+#![allow(clippy::useless_conversion)]
+
+use coursemap::{App, Config};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use coursemap_core::{Config, App};
 
 #[pyclass]
 #[derive(Clone)]
@@ -17,32 +19,55 @@ impl CourseMap {
     pub fn new(config_path: Option<String>) -> PyResult<Self> {
         let config = if let Some(path) = config_path {
             Config::from_file(path).map_err(|e| {
-                pyo3::exceptions::PyIOError::new_err(format!("Failed to load config: {}", e))
+                pyo3::exceptions::PyIOError::new_err(format!("Failed to load config: {e}"))
             })?
         } else {
             Config::load_default().map_err(|e| {
-                pyo3::exceptions::PyIOError::new_err(format!("Failed to load default config: {}", e))
+                pyo3::exceptions::PyIOError::new_err(format!("Failed to load default config: {e}"))
             })?
         };
 
         Ok(CourseMap { config })
     }
 
+    /// Ensure the output path has the correct extension for the given format
+    fn ensure_correct_extension(&self, output_path: &str, format: &str) -> String {
+        let expected_ext = format!(".{format}");
+
+        // If the path already has the correct extension, return as-is
+        if output_path.ends_with(&expected_ext) {
+            return output_path.to_string();
+        }
+
+        // Remove any existing extension that doesn't match
+        let mut base_path = output_path.to_string();
+        for ext in &[".svg", ".png", ".dot"] {
+            if base_path.ends_with(ext) {
+                base_path = base_path[..base_path.len() - ext.len()].to_string();
+                break;
+            }
+        }
+
+        // Add the correct extension
+        format!("{base_path}{expected_ext}")
+    }
+
     /// Generate a course dependency map
     #[pyo3(signature = (input_dir = ".", output_path = "course_map.svg", format = "svg"))]
-    pub fn generate(
-        &self,
-        input_dir: &str,
-        output_path: &str,
-        format: &str,
-    ) -> PyResult<String> {
-        let app = App::new(self.config.clone());
-        
-        app.run(input_dir, output_path, format).map_err(|e| {
-            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to generate course map: {}", e))
-        })?;
+    pub fn generate(&self, input_dir: &str, output_path: &str, format: &str) -> PyResult<String> {
+        // Ensure the output path has the correct extension for the format
+        let actual_output_path = self.ensure_correct_extension(output_path, format);
 
-        Ok(output_path.to_string())
+        let app = App::new(self.config.clone());
+
+        app.run(input_dir, &actual_output_path, format)
+            .map_err(|e| {
+                pyo3::exceptions::PyRuntimeError::new_err(format!(
+                    "Failed to generate course map: {e}"
+                ))
+            })?;
+
+        Ok(actual_output_path)
     }
 
     /// Generate SVG format course map
@@ -69,18 +94,27 @@ impl CourseMap {
         use std::fs;
         use tempfile::NamedTempFile;
 
+        // Create a temporary file that persists until we read it
         let temp_file = NamedTempFile::new().map_err(|e| {
-            pyo3::exceptions::PyIOError::new_err(format!("Failed to create temp file: {}", e))
+            pyo3::exceptions::PyIOError::new_err(format!("Failed to create temp file: {e}"))
         })?;
 
-        let temp_path = temp_file.path().to_str().ok_or_else(|| {
-            pyo3::exceptions::PyValueError::new_err("Invalid temp file path")
+        let temp_path = temp_file.path().to_string_lossy().to_string();
+
+        // Generate the SVG file
+        let app = App::new(self.config.clone());
+        app.run(input_dir, &temp_path, "svg").map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to generate course map: {e}"))
         })?;
 
-        self.generate(input_dir, temp_path, "svg")?;
+        // Read the content while the temp file is still alive
+        let content = fs::read_to_string(&temp_path).map_err(|e| {
+            pyo3::exceptions::PyIOError::new_err(format!("Failed to read generated SVG: {e}"))
+        })?;
 
-        let content = fs::read_to_string(temp_path).map_err(|e| {
-            pyo3::exceptions::PyIOError::new_err(format!("Failed to read generated SVG: {}", e))
+        // Explicitly close the temp file
+        temp_file.close().map_err(|e| {
+            pyo3::exceptions::PyIOError::new_err(format!("Failed to close temp file: {e}"))
         })?;
 
         Ok(content)
@@ -91,7 +125,7 @@ impl CourseMap {
         Python::with_gil(|py| {
             let dict = PyDict::new_bound(py);
             dict.set_item("root_key", &self.config.root_key)?;
-            
+
             let phases = PyDict::new_bound(py);
             for (phase, config) in &self.config.phase {
                 let phase_dict = PyDict::new_bound(py);
@@ -100,7 +134,7 @@ impl CourseMap {
             }
             dict.set_item("phase", phases)?;
             dict.set_item("ignore", &self.config.ignore)?;
-            
+
             Ok(dict.into())
         })
     }
@@ -108,9 +142,10 @@ impl CourseMap {
     /// Parse documents in a directory and return metadata
     #[pyo3(signature = (input_dir = "."))]
     pub fn parse_documents(&self, input_dir: &str) -> PyResult<Vec<PyObject>> {
-        let documents = coursemap_core::parser::parse_directory(input_dir, &self.config).map_err(|e| {
-            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to parse documents: {}", e))
-        })?;
+        let documents =
+            coursemap::parser::parse_directory(input_dir, &self.config).map_err(|e| {
+                pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to parse documents: {e}"))
+            })?;
 
         Python::with_gil(|py| {
             let mut result = Vec::new();
@@ -151,15 +186,15 @@ pub fn generate_inline_svg(input_dir: &str, config_path: Option<String>) -> PyRe
 
 /// Check if Graphviz is available
 #[pyfunction]
-pub fn check_graphviz_available() -> bool {
-    coursemap_core::renderer::check_graphviz_available()
+pub fn graphviz_available() -> bool {
+    coursemap::renderer::graphviz_available()
 }
 
 /// Get Graphviz version information
 #[pyfunction]
-pub fn get_graphviz_info() -> PyResult<String> {
-    coursemap_core::renderer::get_graphviz_info().map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to get Graphviz info: {}", e))
+pub fn graphviz_info() -> PyResult<String> {
+    coursemap::renderer::graphviz_info().map_err(|e| {
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to get Graphviz info: {e}"))
     })
 }
 
@@ -168,7 +203,7 @@ fn coursemap_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CourseMap>()?;
     m.add_function(wrap_pyfunction!(generate_course_map, m)?)?;
     m.add_function(wrap_pyfunction!(generate_inline_svg, m)?)?;
-    m.add_function(wrap_pyfunction!(check_graphviz_available, m)?)?;
-    m.add_function(wrap_pyfunction!(get_graphviz_info, m)?)?;
+    m.add_function(wrap_pyfunction!(graphviz_available, m)?)?;
+    m.add_function(wrap_pyfunction!(graphviz_info, m)?)?;
     Ok(())
 }

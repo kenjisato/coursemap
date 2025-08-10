@@ -28,14 +28,25 @@ pip install coursemap
 ```
 ```python
 import coursemap
-coursemap.generate_course_map("./courses", "course_map.svg")
+
+# Quick display (like matplotlib.pyplot.show())
+coursemap.show("./courses")
+
+# Object-oriented approach (recommended)
+cm = coursemap.CourseMap("./courses")
+cm.show()  # Display inline in Jupyter/Quarto
+cm.save("course_map.svg")  # Save to file
 ```
 
 ### R
 ```r
 install.packages("coursemap")
 library(coursemap)
-generate_course_map("./courses", "course_map.svg")
+
+# Object-oriented approach (recommended)
+cm <- coursemap("./courses")
+plot(cm)  # Display in RStudio/knitr
+write_map(cm, "course_map.svg")  # Save to file
 ```
 
 ## Document Format
@@ -93,8 +104,12 @@ ignore:
 #| echo: false
 import coursemap
 
-svg_content = coursemap.create_quarto_filter("../courses")
-print(svg_content)
+# Simple one-liner for Quarto
+coursemap.show("../courses")
+
+# Or save and display
+cm = coursemap.CourseMap("../courses")
+cm.show()  # Displays inline in Quarto
 ```
 
 ### R
@@ -104,8 +119,9 @@ print(svg_content)
 #| echo: false
 library(coursemap)
 
-svg_content <- create_quarto_filter("../courses")
-cat(svg_content)
+# Simple display in Quarto
+cm <- coursemap("../courses")
+plot(cm)  # Automatically displays inline in Quarto
 ```
 
 ## Output Formats
@@ -118,16 +134,14 @@ cat(svg_content)
 
 ```
 coursemap/
-├── core/               # 🔧 Shared core functionality
-├── coursemap-rs/       # 🦀 Rust library for crates.io
+├── coursemap-rs/       # 🦀 Rust library + CLI for crates.io
 ├── coursemap-py/       # 🐍 Python package for PyPI
 ├── coursemap-r/        # 📊 R package for CRAN (RStudio project)
 ├── test_docs/          # 📝 Test data
-├── coursemap.yml       # ⚙️ Example configuration
 ├── .bumpversion.toml   # 🔄 Version management
 ├── CHANGELOG.md        # 📋 Change history
 ├── PUBLISHING.md       # 📖 Publishing guide
-└── README.md           # 📄 This file
+└── README.md           #  This file
 ```
 
 ## Development
@@ -158,6 +172,49 @@ R -e "rextendr::document()"
 # Version management
 bump-my-version bump patch  # Independent versioning
 ```
+
+## Testing
+
+### Run All Tests
+```bash
+make test           # Run all tests (Rust, Python, R)
+make test-rust      # Run Rust tests only
+make test-python    # Run Python tests only
+make test-r         # Run R tests only
+```
+
+### Individual Package Testing
+
+#### Rust Tests
+```bash
+cd coursemap-rs && cargo test
+```
+
+#### Python Tests
+```bash
+cd coursemap-py
+uv run maturin develop
+uv run --with pytest pytest tests/ -v
+```
+
+#### R Tests
+```bash
+cd coursemap-r
+Rscript --vanilla -e "testthat::test_dir('tests/testthat')"
+```
+
+### Continuous Integration
+Tests run automatically on GitHub Actions for:
+- ✅ Rust (stable)
+- ✅ Python (3.8, 3.9, 3.10, 3.11, 3.12)
+- ✅ R (latest)
+- ✅ Cross-platform builds (Linux, macOS, Windows)
+
+### Test Coverage
+- **Rust**: Unit tests for config, parser, graph, renderer
+- **Python**: Integration tests with PyO3 bindings
+- **R**: Package functionality and Quarto integration
+- **Integration**: Cross-package compatibility tests
 
 ## Version Management Strategy
 

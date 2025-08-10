@@ -13,11 +13,14 @@ RoxygenNote: 7.3.2
 SystemRequirements: Cargo (Rust's package manager), rustc, Rust (>= 1.70), Graphviz (optional, for SVG/PNG output)
 URL: https://github.com/kenjisato/coursemap
 BugReports: https://github.com/kenjisato/coursemap/issues
-Suggests: 
-    testthat (>= 3.0.0),
-    knitr,
-    rmarkdown
 VignetteBuilder: knitr
 Config/rextendr/version: 0.4.1
 Depends: 
     R (>= 4.2)
+Imports:
+    DiagrammeR
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    rstudioapi
