@@ -17,15 +17,9 @@ impl CourseMap {
     #[new]
     #[pyo3(signature = (config_path = None))]
     pub fn new(config_path: Option<String>) -> PyResult<Self> {
-        let config = if let Some(path) = config_path {
-            Config::from_file(path).map_err(|e| {
-                pyo3::exceptions::PyIOError::new_err(format!("Failed to load config: {e}"))
-            })?
-        } else {
-            Config::load_default().map_err(|e| {
-                pyo3::exceptions::PyIOError::new_err(format!("Failed to load default config: {e}"))
-            })?
-        };
+        let config = coursemap::load_config_from_path(config_path.as_deref()).map_err(|e| {
+            pyo3::exceptions::PyIOError::new_err(format!("Failed to load config: {e}"))
+        })?;
 
         Ok(CourseMap { config })
     }

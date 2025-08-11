@@ -1,16 +1,14 @@
 use extendr_api::prelude::*;
-use coursemap::{Config, App};
+use coursemap::App;
 use std::fs;
 use tempfile::NamedTempFile;
 
 /// Generate a course dependency map
 #[extendr]
 fn generate_course_map(input_dir: &str, output_path: &str, format: &str, config_path: Option<&str>) -> Result<String> {
-    let config = if let Some(path) = config_path {
-        Config::from_file(path).map_err(|e| Error::Other(format!("Failed to load config: {}", e)))?
-    } else {
-        Config::load_default().map_err(|e| Error::Other(format!("Failed to load default config: {}", e)))?
-    };
+    let config = coursemap::load_config_from_path(config_path).map_err(|e| {
+        Error::Other(format!("Failed to load config: {}", e))
+    })?;
 
     let app = App::new(config);
     
@@ -24,11 +22,9 @@ fn generate_course_map(input_dir: &str, output_path: &str, format: &str, config_
 /// Generate SVG content as string for inline embedding
 #[extendr]
 fn generate_inline_svg(input_dir: &str, config_path: Option<&str>) -> Result<String> {
-    let config = if let Some(path) = config_path {
-        Config::from_file(path).map_err(|e| Error::Other(format!("Failed to load config: {}", e)))?
-    } else {
-        Config::load_default().map_err(|e| Error::Other(format!("Failed to load default config: {}", e)))?
-    };
+    let config = coursemap::load_config_from_path(config_path).map_err(|e| {
+        Error::Other(format!("Failed to load config: {}", e))
+    })?;
 
     // Create a temporary file that persists until we read it
     let temp_file = NamedTempFile::new().map_err(|e| {
@@ -59,11 +55,9 @@ fn generate_inline_svg(input_dir: &str, config_path: Option<&str>) -> Result<Str
 /// Generate DOT content as string (memory-efficient)
 #[extendr]
 fn generate_dot_string(input_dir: &str, config_path: Option<&str>) -> Result<String> {
-    let config = if let Some(path) = config_path {
-        Config::from_file(path).map_err(|e| Error::Other(format!("Failed to load config: {}", e)))?
-    } else {
-        Config::load_default().map_err(|e| Error::Other(format!("Failed to load default config: {}", e)))?
-    };
+    let config = coursemap::load_config_from_path(config_path).map_err(|e| {
+        Error::Other(format!("Failed to load config: {}", e))
+    })?;
 
     let app = App::new(config);
     app.generate_dot_string(input_dir).map_err(|e| {
@@ -88,11 +82,9 @@ fn graphviz_info() -> Result<String> {
 /// Parse documents in a directory and return metadata
 #[extendr]
 fn parse_documents(input_dir: &str, config_path: Option<&str>) -> Result<List> {
-    let config = if let Some(path) = config_path {
-        Config::from_file(path).map_err(|e| Error::Other(format!("Failed to load config: {}", e)))?
-    } else {
-        Config::load_default().map_err(|e| Error::Other(format!("Failed to load default config: {}", e)))?
-    };
+    let config = coursemap::load_config_from_path(config_path).map_err(|e| {
+        Error::Other(format!("Failed to load config: {}", e))
+    })?;
 
     let documents = coursemap::parser::parse_directory(input_dir, &config).map_err(|e| {
         Error::Other(format!("Failed to parse documents: {}", e))
@@ -116,11 +108,9 @@ fn parse_documents(input_dir: &str, config_path: Option<&str>) -> Result<List> {
 /// Get configuration as list
 #[extendr]
 fn get_config(config_path: Option<&str>) -> Result<List> {
-    let config = if let Some(path) = config_path {
-        Config::from_file(path).map_err(|e| Error::Other(format!("Failed to load config: {}", e)))?
-    } else {
-        Config::load_default().map_err(|e| Error::Other(format!("Failed to load default config: {}", e)))?
-    };
+    let config = coursemap::load_config_from_path(config_path).map_err(|e| {
+        Error::Other(format!("Failed to load config: {}", e))
+    })?;
 
     let mut result = List::new(3);
     result.set_names(&["root_key", "phase", "ignore"])?;

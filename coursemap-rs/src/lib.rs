@@ -75,6 +75,16 @@ pub mod renderer;
 pub use anyhow::{Error, Result};
 pub use config::Config;
 
+/// Common helper function to load config from optional path
+/// Used by language bindings to avoid code duplication
+pub fn load_config_from_path(config_path: Option<&str>) -> Result<Config> {
+    if let Some(path) = config_path {
+        Config::from_file(path)
+    } else {
+        Config::load_default()
+    }
+}
+
 /// The main application structure
 pub struct App {
     pub config: config::Config,
@@ -84,6 +94,13 @@ impl App {
     /// Create a new App instance with the given configuration
     pub fn new(config: config::Config) -> Self {
         Self { config }
+    }
+
+    /// Create a new App instance with config loaded from optional path
+    /// This is a common pattern used by language bindings
+    pub fn with_config_path(config_path: Option<&str>) -> Result<Self> {
+        let config = load_config_from_path(config_path)?;
+        Ok(Self::new(config))
     }
 
     /// Run the course map generation process

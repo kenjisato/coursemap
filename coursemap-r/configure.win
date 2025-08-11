@@ -1,65 +1,10 @@
 #!/usr/bin/env sh
 
-# Vendor coursemap-rs source code for self-contained builds
-VENDOR_DIR="src/rust/vendor/coursemap"
-COURSEMAP_RS_SRC="../coursemap-rs/src"
-COURSEMAP_RS_CARGO="../coursemap-rs/Cargo.toml"
+# Source common configuration logic
+. ./configure_common.sh
 
-echo "Preparing vendor directory for coursemap-rs..."
+# Setup vendor directory
+setup_vendor_directory
 
-# Create vendor directory if it doesn't exist
-if [ ! -d "$VENDOR_DIR" ]; then
-    mkdir -p "$VENDOR_DIR"
-    echo "Created vendor directory: $VENDOR_DIR"
-fi
-
-# Copy source files from coursemap-rs if available
-if [ -d "$COURSEMAP_RS_SRC" ] && [ -f "$COURSEMAP_RS_CARGO" ]; then
-    # Create src directory in vendor
-    VENDOR_SRC_DIR="$VENDOR_DIR/src"
-    mkdir -p "$VENDOR_SRC_DIR"
-    
-    # Copy all .rs files
-    cp "$COURSEMAP_RS_SRC"/*.rs "$VENDOR_SRC_DIR/" 2>/dev/null || true
-    
-    # Copy default-coursemap.yml if it exists
-    if [ -f "$COURSEMAP_RS_SRC/default-coursemap.yml" ]; then
-        cp "$COURSEMAP_RS_SRC/default-coursemap.yml" "$VENDOR_SRC_DIR/"
-    fi
-    
-    # Create simplified Cargo.toml for the vendored library
-    cat > "$VENDOR_DIR/Cargo.toml" << 'EOF'
-[package]
-name = "coursemap"
-version = "0.1.5"
-edition = "2021"
-
-[lib]
-name = "coursemap"
-crate-type = ["rlib"]
-path = "src/lib.rs"
-
-[features]
-default = []
-cli = []
-
-[dependencies]
-anyhow = "1.0"
-log = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
-gray_matter = "0.2"
-petgraph = "0.6"
-walkdir = "2.0"
-indexmap = { version = "2.0", features = ["serde"] }
-tempfile = "3.0"
-EOF
-    
-    echo "Vendored coursemap-rs source code to $VENDOR_DIR"
-else
-    echo "Warning: coursemap-rs source directory not found at $COURSEMAP_RS_SRC"
-    echo "This is expected when building from a distributed package."
-fi
-
-# Run the R configuration script
+# Run the R configuration script (Windows version)
 "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" tools/config.R
