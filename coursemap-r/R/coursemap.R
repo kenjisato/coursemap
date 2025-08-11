@@ -3,13 +3,8 @@
 #' R wrapper for the Rust-based course-map tool.
 #' Provides intuitive API with seamless integration with knitr/Quarto.
 #' 
-#' @name coursemap-package
-#' @aliases coursemap
-#' @docType package
-#' @title Course Dependency Map Visualization
-#' @author Kenji Sato
-#' @keywords package
-NULL
+#' @keywords internal
+"_PACKAGE"
 
 #' Create a course map object
 #' 
@@ -204,4 +199,71 @@ is_testing <- function() {
   identical(Sys.getenv("TESTTHAT"), "true") || 
   exists("test_that", envir = .GlobalEnv) ||
   any(grepl("testthat", search()))
+}
+
+# Low-level function documentation
+
+#' Generate a course dependency map (low-level)
+#' 
+#' Low-level function to generate course dependency maps. 
+#' Use the high-level \code{\link{coursemap}} function instead.
+#' 
+#' @param input_dir Character string. Path to the directory containing course documents.
+#' @param output_path Character string. Path where the output file will be saved.
+#' @param format Character string. Output format ("svg", "png", "dot").
+#' @param config_path Character string or NULL. Path to the configuration file. If NULL, uses default configuration.
+#' 
+#' @return Character string. Path to the generated file.
+#' 
+#' @keywords internal
+#' @export
+generate_course_map <- function(input_dir, output_path, format, config_path) {
+  .Call("wrap__generate_course_map", input_dir, output_path, format, config_path, PACKAGE = "coursemap")
+}
+
+#' Generate SVG content as string for inline embedding (low-level)
+#' 
+#' Low-level function to generate SVG content as string.
+#' Use the high-level \code{\link{coursemap}} function instead.
+#' 
+#' @param input_dir Character string. Path to the directory containing course documents.
+#' @param config_path Character string or NULL. Path to the configuration file. If NULL, uses default configuration.
+#' 
+#' @return Character string. SVG content.
+#' 
+#' @keywords internal
+#' @export
+generate_inline_svg <- function(input_dir, config_path) {
+  .Call("wrap__generate_inline_svg", input_dir, config_path, PACKAGE = "coursemap")
+}
+
+#' Parse documents in a directory and return metadata (low-level)
+#' 
+#' Low-level function to parse documents and return metadata.
+#' Use the high-level \code{\link{coursemap}} function instead.
+#' 
+#' @param input_dir Character string. Path to the directory containing course documents.
+#' @param config_path Character string or NULL. Path to the configuration file. If NULL, uses default configuration.
+#' 
+#' @return List. Document metadata.
+#' 
+#' @keywords internal
+#' @export
+parse_documents <- function(input_dir, config_path) {
+  .Call("wrap__parse_documents", input_dir, config_path, PACKAGE = "coursemap")
+}
+
+#' Get configuration as list (low-level)
+#' 
+#' Low-level function to get configuration.
+#' Use the high-level \code{\link{coursemap}} function instead.
+#' 
+#' @param config_path Character string or NULL. Path to the configuration file. If NULL, uses default configuration.
+#' 
+#' @return List. Configuration settings.
+#' 
+#' @keywords internal
+#' @export
+get_config <- function(config_path) {
+  .Call("wrap__get_config", config_path, PACKAGE = "coursemap")
 }

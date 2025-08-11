@@ -146,32 +146,53 @@ coursemap/
 
 ## Development
 
-Each package can be developed independently with its own versioning:
+This project uses a monorepo structure with path dependencies for efficient development.
 
-### Rust
+### Architecture
+- **coursemap-rs**: Core Rust library with optional CLI feature
+- **coursemap-py**: Python bindings using path dependency to coursemap-rs
+- **coursemap-r**: R package using path dependency to coursemap-rs
+
+### Building from Source
+
+#### Rust (CLI + Library)
 ```bash
 cd coursemap-rs
-cargo build
+# Build with CLI (default)
+cargo build --features cli
+# Build library only (for bindings)
+cargo build --no-default-features
 cargo test
-# Version management
-bump-my-version bump patch  # Independent versioning
 ```
 
-### Python
+#### Python Package
 ```bash
 cd coursemap-py
+# Requires coursemap-rs to be available at ../coursemap-rs
 maturin develop
 # Version management
 bump-my-version bump minor  # Independent versioning
 ```
 
-### R (RStudio Project)
+#### R Package (RStudio Project)
 ```bash
 cd coursemap-r
+# Requires coursemap-rs to be available at ../coursemap-rs
 R -e "rextendr::document()"
 # Version management
 bump-my-version bump patch  # Independent versioning
 ```
+
+### Path Dependencies
+The Python and R packages use path dependencies to the core Rust library:
+- **coursemap-py**: `coursemap = { path = "../coursemap-rs", default-features = false }`
+- **coursemap-r**: `coursemap = { path = "../../../coursemap-rs", default-features = false }`
+
+This ensures:
+- ✅ No external crates.io dependency during development
+- ✅ Lightweight builds (no CLI dependencies for bindings)
+- ✅ Consistent behavior across all packages
+- ✅ CRAN-compatible offline builds
 
 ## Testing
 

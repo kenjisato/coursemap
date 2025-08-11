@@ -11,7 +11,7 @@ name = 'coursemap'
 
 [dependencies]
 extendr-api = '*'
-coursemap = "0.1.5"
+coursemap = { path = "./vendor/coursemap", default-features = false }
 tempfile = "3.0"
 
 [profile.release]

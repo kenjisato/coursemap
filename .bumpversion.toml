@@ -42,6 +42,15 @@ filename = "coursemap-r/src/rust/Cargo.toml"
 search = "version = '{current_version}'"
 replace = "version = '{new_version}'"
 
+[[tool.bumpversion.files]]
+filename = "coursemap-r/configure"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "coursemap-r/configure.win"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"

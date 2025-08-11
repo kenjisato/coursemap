@@ -1,5 +1,5 @@
 # Course Map - Multi-language Test Runner
-.PHONY: help test test-rust test-python test-r build clean install
+.PHONY: help test test-rust test-python test-r check-r build clean install bump-patch bump-minor bump-major
 
 # Default target
 help:
@@ -10,9 +10,15 @@ help:
 	@echo "  test-rust   - Run Rust tests only"
 	@echo "  test-python - Run Python tests only"
 	@echo "  test-r      - Run R tests only"
+	@echo "  check-r     - Run R CMD check (package validation)"
 	@echo "  build       - Build all packages"
 	@echo "  clean       - Clean build artifacts"
 	@echo "  install     - Install all packages for development"
+	@echo ""
+	@echo "Version management:"
+	@echo "  bump-patch  - Bump patch version (0.1.5 -> 0.1.6)"
+	@echo "  bump-minor  - Bump minor version (0.1.5 -> 0.2.0)"
+	@echo "  bump-major  - Bump major version (0.1.5 -> 1.0.0)"
 	@echo ""
 
 # Run all tests
@@ -40,6 +46,16 @@ test-r:
 		echo "⚠️  Rscript not found, skipping R tests"; \
 	fi
 	@echo "✅ R tests completed"
+
+# R CMD check (package validation)
+check-r:
+	@echo "🔍 Running R CMD check..."
+	@if command -v Rscript >/dev/null 2>&1; then \
+		cd coursemap-r && Rscript --vanilla -e "if (!require('devtools', quietly=TRUE)) install.packages('devtools', repos='https://cran.rstudio.com/'); devtools::check()"; \
+	else \
+		echo "⚠️  Rscript not found, skipping R CMD check"; \
+	fi
+	@echo "✅ R CMD check completed"
 
 # Build all packages
 build:
@@ -84,3 +100,31 @@ format:
 	@cd coursemap-py && uv run --with black black python/
 	@cd coursemap-py && uv run --with isort isort python/
 	@echo "✅ Formatting completed"
+
+# Version management (R package)
+bump-patch:
+	@echo "📈 Bumping patch version..."
+	@if command -v bumpversion >/dev/null 2>&1; then \
+		cd coursemap-r && bumpversion patch; \
+	else \
+		echo "⚠️  bumpversion not found. Install with: pip install bump2version"; \
+	fi
+	@echo "✅ Patch version bumped"
+
+bump-minor:
+	@echo "📈 Bumping minor version..."
+	@if command -v bumpversion >/dev/null 2>&1; then \
+		cd coursemap-r && bumpversion minor; \
+	else \
+		echo "⚠️  bumpversion not found. Install with: pip install bump2version"; \
+	fi
+	@echo "✅ Minor version bumped"
+
+bump-major:
+	@echo "📈 Bumping major version..."
+	@if command -v bumpversion >/dev/null 2>&1; then \
+		cd coursemap-r && bumpversion major; \
+	else \
+		echo "⚠️  bumpversion not found. Install with: pip install bump2version"; \
+	fi
+	@echo "✅ Major version bumped"

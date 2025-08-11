@@ -10,8 +10,23 @@ This document provides examples of how to use the coursemap tool in different en
 # Install from crates.io
 cargo install coursemap
 
-# Or build from source
-cargo build --release
+# Or build from source (requires CLI feature)
+cd coursemap-rs
+cargo build --release --features cli
+```
+
+### Development Build
+
+```bash
+# Clone the repository
+git clone https://github.com/kenjisato/coursemap.git
+cd coursemap/coursemap-rs
+
+# Build with CLI (default)
+cargo build --features cli
+
+# Build library only (for development/testing)
+cargo build --no-default-features
 ```
 
 ### Basic Usage
@@ -212,9 +227,59 @@ Make sure the package is properly installed:
 maturin develop --features python
 ```
 
+### Python Development Build Error
+
+For development builds from source:
+```bash
+# Clone the repository
+git clone https://github.com/kenjisato/coursemap.git
+cd coursemap/coursemap-py
+
+# Build with maturin (requires coursemap-rs at ../coursemap-rs)
+maturin develop
+```
+
 ### R Package Build Error
 
 Make sure rextendr is installed and Rust is available:
 ```r
 install.packages("rextendr")
 rextendr::document()
+```
+
+For development builds from source:
+```bash
+# Clone the repository
+git clone https://github.com/kenjisato/coursemap.git
+cd coursemap/coursemap-r
+
+# Build R package (requires coursemap-rs at ../coursemap-rs)
+R -e "rextendr::document()"
+```
+
+## Development Notes
+
+### Monorepo Structure
+This project uses a monorepo with path dependencies:
+
+```
+coursemap/
+├── coursemap-rs/       # Core Rust library + CLI
+├── coursemap-py/       # Python bindings (depends on ../coursemap-rs)
+├── coursemap-r/        # R package (depends on ../coursemap-rs)
+└── test_docs/          # Test data
+```
+
+### Feature Flags
+The core Rust library uses feature flags:
+- **Default**: `cli` feature enabled (includes clap, env_logger)
+- **Library only**: `--no-default-features` (lightweight for bindings)
+
+### Path Dependencies
+- **Python**: `coursemap = { path = "../coursemap-rs", default-features = false }`
+- **R**: `coursemap = { path = "../../../coursemap-rs", default-features = false }`
+
+This ensures:
+- ✅ No external crates.io dependency during development
+- ✅ Lightweight builds (no CLI dependencies for bindings)
+- ✅ CRAN-compatible offline builds

@@ -7,12 +7,26 @@ This document outlines the process for publishing the course-map packages to the
 ```
 coursemap/
 ├── coursemap-rs/       # Rust library + CLI for crates.io
-├── coursemap-py/       # Python package for PyPI
-├── coursemap-r/        # R package for CRAN (RStudio project)
+├── coursemap-py/       # Python package for PyPI (path dep: ../coursemap-rs)
+├── coursemap-r/        # R package for CRAN (path dep: ../coursemap-rs)
 ├── test_docs/          # Test data
 ├── .bumpversion.toml   # Version management
 └── README.md           # Main documentation
 ```
+
+## Architecture Overview
+
+This project uses a **monorepo with path dependencies**:
+
+- **coursemap-rs**: Core Rust library with optional CLI feature
+- **coursemap-py**: Python bindings using `coursemap = { path = "../coursemap-rs", default-features = false }`
+- **coursemap-r**: R package using `coursemap = { path = "../../../coursemap-rs", default-features = false }`
+
+### Key Benefits
+- ✅ **Development**: No external crates.io dependency during development
+- ✅ **Lightweight**: Bindings exclude heavy CLI dependencies (clap, env_logger)
+- ✅ **CRAN Compatible**: R package builds offline without network access
+- ✅ **Consistency**: All packages use the same core logic
 
 ## 1. Rust Library (crates.io)
 
@@ -45,6 +59,12 @@ cargo publish
 ### Location
 `coursemap-py/`
 
+### Important: Path Dependency Handling
+The Python package uses a path dependency to `../coursemap-rs`. For PyPI publishing, maturin automatically:
+- ✅ Includes the Rust source code in the source distribution
+- ✅ Builds the Rust code during `pip install`
+- ✅ Creates platform-specific wheels
+
 ### Publishing Steps
 ```bash
 cd coursemap-py
@@ -52,7 +72,7 @@ cd coursemap-py
 # Install maturin if not already installed
 pip install maturin
 
-# Build the package
+# Build the package (includes Rust source)
 maturin build --release
 
 # Upload to PyPI
@@ -81,6 +101,15 @@ print(svg_content)
 
 ### Location
 `coursemap-r/`
+
+### Important: Path Dependency and CRAN Requirements
+The R package uses a path dependency to `../coursemap-rs`. For CRAN submission:
+- ✅ **R CMD build** creates a tar.gz with all Rust source code included
+- ✅ **Offline builds**: No internet connection required during installation
+- ✅ **Self-contained**: All dependencies bundled in the package
+- ✅ **CRAN compatible**: Meets CRAN's offline build requirements
+
+The `tools/config.R` script automatically handles the Rust source inclusion during package build.
 
 ### Publishing Steps (Following Hadley-Bryan Protocol)
 

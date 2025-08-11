@@ -3,12 +3,8 @@
 \docType{package}
 \name{coursemap-package}
 \alias{coursemap-package}
-\alias{coursemap}
-\title{Course Dependency Map Visualization}
+\title{Course Map - R Interface}
 \description{
-Course Map - R Interface
-}
-\details{
 R wrapper for the Rust-based course-map tool.
 Provides intuitive API with seamless integration with knitr/Quarto.
 }
@@ -21,6 +17,7 @@ Useful links:
 
 }
 \author{
-Kenji Sato
+\strong{Maintainer}: Kenji Sato \email{mail@kenjisato.jp}
+
 }
-\keyword{package}
+\keyword{internal}

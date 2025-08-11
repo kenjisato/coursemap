@@ -1,8 +1,11 @@
 //! Command-line interface for the course map tool
 
+#[cfg(feature = "cli")]
 use clap::{Parser, Subcommand, ValueEnum};
+#[cfg(feature = "cli")]
 use std::path::PathBuf;
 
+#[cfg(feature = "cli")]
 #[derive(Parser)]
 #[command(about = "Generate course dependency maps from Quarto/Markdown documents")]
 #[command(version)]
@@ -31,6 +34,7 @@ pub struct Cli {
     pub verbose: bool,
 }
 
+#[cfg(feature = "cli")]
 #[derive(Subcommand)]
 pub enum Commands {
     /// Show current configuration
@@ -42,6 +46,7 @@ pub enum Commands {
     },
 }
 
+#[cfg(feature = "cli")]
 #[derive(Clone, ValueEnum)]
 pub enum OutputFormat {
     /// SVG format
@@ -52,6 +57,7 @@ pub enum OutputFormat {
     Dot,
 }
 
+#[cfg(feature = "cli")]
 impl std::fmt::Display for OutputFormat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -62,6 +68,7 @@ impl std::fmt::Display for OutputFormat {
     }
 }
 
+#[cfg(feature = "cli")]
 impl Cli {
     /// Parse command line arguments
     pub fn parse_args() -> Self {

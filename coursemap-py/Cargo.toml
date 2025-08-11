@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.22", features = ["extension-module"] }
-coursemap = { path = "../coursemap-rs" }
+coursemap = { path = "../coursemap-rs", default-features = false }
 tempfile = "3.0"
 
 [features]

@@ -1,11 +1,14 @@
 //! Course Map - A tool to visualize course dependencies from Quarto/Markdown documents
 
+#[cfg(feature = "cli")]
 use anyhow::Result;
+#[cfg(feature = "cli")]
 use coursemap::{
     cli::{Cli, Commands},
     renderer, App, Config,
 };
 
+#[cfg(feature = "cli")]
 fn main() -> Result<()> {
     let args = Cli::parse_args();
 
@@ -16,7 +19,7 @@ fn main() -> Result<()> {
         None => {
             // Default behavior: generate course map
             if let Some(input_dir) = args.input_dir() {
-                generate_course_map(&args, input_dir)?;
+                run_cli_generate(&args, input_dir)?;
             } else {
                 eprintln!("Error: Input directory is required");
                 eprintln!("Usage: coursemap <INPUT> [OPTIONS]");
@@ -31,6 +34,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "cli")]
 fn show_config(config_path: Option<&std::path::PathBuf>) -> Result<()> {
     let config = if let Some(config_path) = config_path {
         Config::from_file(config_path)?
@@ -58,7 +62,8 @@ fn show_config(config_path: Option<&std::path::PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
+#[cfg(feature = "cli")]
+fn run_cli_generate(args: &Cli, input_dir: &str) -> Result<()> {
     // Set up logging based on verbosity
     if args.verbose {
         env_logger::Builder::from_default_env()
@@ -132,4 +137,9 @@ fn generate_course_map(args: &Cli, input_dir: &str) -> Result<()> {
             std::process::exit(1);
         }
     }
+}
+
+#[cfg(not(feature = "cli"))]
+fn main() {
+    panic!("This binary requires the 'cli' feature to be enabled");
 }
